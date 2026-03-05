@@ -4,14 +4,16 @@ import type { SubmitHandler } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import customerQuieries from '../queries/customer_quieries'
+import DM_Input from './forms/DM_Input'
+import DM_Select from './forms/DM_Select'
 
 const schema = z.object({
     code: z.string().min(1, 'Code is required'),
     name: z.string().min(1, 'Name is required'),
     email: z.email('Enter a valid email address'),
-    phone: z.string().optional(),
-    billingTermsCode: z.string(),
-    shippingTermsCode: z.string(),
+    phone: z.string(),
+    billingTermId: z.number(),
+    shippingTermId: z.number(),
 })
 
 type CustomerFormSchema = z.infer<typeof schema>
@@ -28,8 +30,8 @@ export default function CustomerForm() {
             name: '',
             email: '',
             phone: '',
-            billingTermsCode: '',
-            shippingTermsCode: '',
+            billingTermId: 1,
+            shippingTermId: 1,
         },
     })
 
@@ -61,139 +63,71 @@ export default function CustomerForm() {
         >
             <h1 className="text-2xl font-bold">Create Customer</h1>
 
-            {/* Code */}
-            <div className="flex flex-col">
-                <label htmlFor="code" className="mb-1 text-sm font-medium">
-                    Code
-                </label>
-                <input
-                    id="code"
-                    type="text"
-                    {...register('code', { required: 'Code is required' })}
-                    className="rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                />
-                {errors.code && (
-                    <span className="mt-1 text-sm text-red-500">
-                        {errors.code.message}
-                    </span>
-                )}
-            </div>
+            <DM_Input
+                {...register('code')}
+                label="Code"
+                error={errors.code?.message}
+            />
 
-            {/* Name */}
-            <div className="flex flex-col">
-                <label htmlFor="name" className="mb-1 text-sm font-medium">
-                    Name
-                </label>
-                <input
-                    id="name"
-                    type="text"
-                    {...register('name', { required: 'Name is required' })}
-                    className="rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                />
-                {errors.name && (
-                    <span className="mt-1 text-sm text-red-500">
-                        {errors.name.message}
-                    </span>
-                )}
-            </div>
+            <DM_Input
+                {...register('name')}
+                label="Name"
+                error={errors.name?.message}
+            />
 
-            {/* Email */}
-            <div className="flex flex-col">
-                <label htmlFor="email" className="mb-1 text-sm font-medium">
-                    Email
-                </label>
-                <input
-                    id="email"
-                    type="email"
-                    {...register('email', {
-                        required: 'Email is required',
-                        pattern: {
-                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                            message: 'Enter a valid email address',
-                        },
-                    })}
-                    className="rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                />
-                {errors.email && (
-                    <span className="mt-1 text-sm text-red-500">
-                        {errors.email.message}
-                    </span>
-                )}
-            </div>
+            <DM_Input
+                {...register('email')}
+                type="email"
+                label="Email"
+                error={errors.email?.message}
+            />
 
-            {/* Phone */}
-            <div className="flex flex-col">
-                <label htmlFor="phone" className="mb-1 text-sm font-medium">
-                    Phone
-                </label>
-                <input
-                    id="phone"
-                    type="tel"
-                    {...register('phone')}
-                    className="rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                />
-                {errors.phone && (
-                    <span className="mt-1 text-sm text-red-500">
-                        {errors.phone.message}
-                    </span>
-                )}
-            </div>
+            <DM_Input
+                {...register('phone')}
+                type="tel"
+                label="Phone"
+                error={errors.phone?.message}
+            />
 
-            {/* Billing Terms */}
-            <div className="flex flex-col">
-                <label
-                    htmlFor="billingTermsCode"
-                    className="mb-1 text-sm font-medium"
-                >
-                    Billing Terms
-                </label>
-                <select
-                    id="billingTermsCode"
-                    {...register('billingTermsCode')}
-                    className="rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                >
-                    {billingTerms?.map(
-                        (term: { code: string; description: string }) => (
-                            <option key={term.code} value={term.code}>
-                                {term.code}: {term.description}
-                            </option>
-                        ),
-                    )}
-                </select>
-                {errors.billingTermsCode && (
-                    <span className="mt-1 text-sm text-red-500">
-                        {errors.billingTermsCode.message}
-                    </span>
-                )}
-            </div>
+            <DM_Select
+                {...register('billingTermId', {
+                    valueAsNumber: true,
+                })}
+                label="Billing Terms"
+                options={
+                    billingTerms?.map(
+                        (term: {
+                            id: number
+                            code: string
+                            description: string
+                        }) => ({
+                            value: term.id,
+                            label: `${term.code}: ${term.description}`,
+                        }),
+                    ) ?? []
+                }
+                error={errors.billingTermId?.message}
+            />
 
-            {/* Shipping Terms */}
-            <div className="flex flex-col">
-                <label
-                    htmlFor="shippingTermsCode"
-                    className="mb-1 text-sm font-medium"
-                >
-                    Shipping Terms
-                </label>
-                <select
-                    id="shippingTermsCode"
-                    {...register('shippingTermsCode')}
-                    className="rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
-                >
-                    {shippingTerms?.map(
-                        (term: { code: string; description: string }) => (
-                            <option key={term.code} value={term.code}>
-                                {term.code}: {term.description}
-                            </option>
-                        ),
-                    )}
-                </select>
-                {errors.shippingTermsCode && (
-                    <span className="mt-1 text-sm text-red-500">
-                        {errors.shippingTermsCode.message}
-                    </span>
-                )}
-            </div>
+            <DM_Select
+                {...register('shippingTermId', {
+                    valueAsNumber: true,
+                })}
+                label="Shipping Terms"
+                options={
+                    shippingTerms?.map(
+                        (term: {
+                            id: number
+                            code: string
+                            description: string
+                        }) => ({
+                            value: term.id,
+                            label: `${term.code}: ${term.description}`,
+                        }),
+                    ) ?? []
+                }
+                error={errors.shippingTermId?.message}
+            />
 
             <button
                 type="submit"
